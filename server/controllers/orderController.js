@@ -3,7 +3,8 @@ import Order from "../models/Orders.js";
 import Product from "../models/Product.js";
 import mongoose from "mongoose";
 import stripe from 'stripe';
-import User from '..models/User.js'
+import User from "../models/User.js"
+
 
 
 
