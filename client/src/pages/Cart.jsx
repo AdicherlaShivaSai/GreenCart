@@ -24,7 +24,7 @@ const Cart = () => {
 
     const getUserAddress = async()=>{
         try{
-            const {data} = await axios.get('/api/address/get')
+            const {data} = await axios.get('https://greencart-mk3l.onrender.com/api/address/get')
             if(data.success){
                 setAddresses(data.addresses)
                 if(data.addresses.length > 0 ){
@@ -47,7 +47,7 @@ const Cart = () => {
 
              //Place order with COD
             if(paymentMethod === 'COD'){
-                const {data} =await axios.post('/api/order/cod', {
+                const {data} =await axios.post('https://greencart-mk3l.onrender.com/api/order/cod', {
                     userId: user._id,
                     items: cartArray.map(item => ({product: item._id, quantity: item.quantity})),
                     address: selectedAddress._id
@@ -62,7 +62,7 @@ const Cart = () => {
                 }
             }else{
                 //Place Order with Stripe
-                const {data} =await axios.post('/api/order/stripe', {
+                const {data} =await axios.post('https://greencart-mk3l.onrender.com/api/order/stripe', {
                     userId: user._id,
                     items: cartArray.map(item => ({product: item._id, quantity: item.quantity})),
                     address: selectedAddress._id

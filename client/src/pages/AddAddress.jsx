@@ -51,7 +51,7 @@ const AddAddress = () => {
         }
 
         try {
-            const { data } = await axios.post('/api/address/add', { address });
+            const { data } = await axios.post('https://greencart-mk3l.onrender.com/api/address/add', { address });
             toast.success(data.message);
             navigate('/cart');
         } catch (error) {

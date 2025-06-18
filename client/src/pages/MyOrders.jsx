@@ -8,7 +8,7 @@ const MyOrders = () => {
 
   const fetchMyOrders = async () => {
     try {
-      const { data } = await axios.get('/api/order/user');
+      const { data } = await axios.get('https://greencart-mk3l.onrender.com/api/order/user');
       if (data.success) {
         setMyOrders(data.orders);
       }

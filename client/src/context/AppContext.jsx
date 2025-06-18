@@ -23,7 +23,7 @@ export const AppProvider = ({ children }) => {
   //Fetch seller status
   const fetchSeller = async()=>{
     try{
-      const {data} = await axios.get('/api/seller/is-auth')
+      const {data} = await axios.get('https://greencart-mk3l.onrender.com/api/seller/is-auth')
       if(data.success){
         setIsSeller(true);
       }
@@ -38,7 +38,7 @@ export const AppProvider = ({ children }) => {
 //fetch user Auth status , User data and cart items
 const fetchUser = async()=>{
   try{
-    const {data} = await axios.get('/api/user/is-auth')
+    const {data} = await axios.get('https://greencart-mk3l.onrender.com/api/user/is-auth')
     if(data.success){
       setUser(data.user)
       setCartItems(data.user.cartItems)
@@ -51,7 +51,7 @@ const fetchUser = async()=>{
 //Fetch all products
   const fetchProducts = async () => {
     try{
-      const {data} = await axios.get('/api/product/list')
+      const {data} = await axios.get('https://greencart-mk3l.onrender.com/api/product/list')
       if(data.success){
         setProducts(data.products)
       }
@@ -129,7 +129,7 @@ const fetchUser = async()=>{
   useEffect(()=>{
     const updateCart = async()=>{
       try{
-        const {data} = await axios.post('/api/cart/update', {cartItems})
+        const {data} = await axios.post('https://greencart-mk3l.onrender.com/api/cart/update', {cartItems})
         if(!data.success){
           toast.error(data.message)
         }
