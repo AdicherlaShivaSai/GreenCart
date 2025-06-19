@@ -20,7 +20,7 @@ await connectDB(); // Connect to MongoDB
 await connectCloudinary();
 
 // Define allowed origins for CORS
-const allowedOrigins = ['http://localhost:5173'];
+const allowedOrigins = ['https://greencart-1-0zt6.onrender.com'];
 
 app.post('/stripe', express.raw({type: 'application/json'}), stripeWebhooks)
 
