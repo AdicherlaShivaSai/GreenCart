@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import stripe from 'stripe';
 import User from "../models/User.js"
 
+const FRONTEND_URL = 'https://greencart-1-0zt6.onrender.com';
 
 
 
@@ -101,8 +102,8 @@ export const placeOrderStripe = async (req, res) => {
     const session = await stripeInstance.checkout.sessions.create({
       line_items,
       mode: "payment",
-      success_url: `${origin}/loader?next=my-orders`,
-      cancel_url: `${origin}/cart`,
+      success_url: `${FRONTEND_URL}/loader?next=my-orders`,
+      cancel_url: `${FRONTEND_URL}/cart`,
       metadata: {
         orderId: order._id.toString(),
         userId,
