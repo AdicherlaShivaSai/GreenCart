@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import stripe from 'stripe';
 import User from "../models/User.js"
 
-const FRONTEND_URL = 'https://green-cart-sandy.vercel.app/';
+const FRONTEND_URL = 'https://greencart-1-0zt6.onrender.com';
 
 
 
