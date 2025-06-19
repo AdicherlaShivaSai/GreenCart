@@ -15,7 +15,7 @@ const Login = () => {
 
         try{
             e.preventDefault();
-            const {data} = await axios.post(`https://greencart-mk3l.onrender.com/api/user/${state}`, {
+            const {data} = await axios.post(`/api/user/${state}`, {
                 email, password, name
             })
             if(data.success){
