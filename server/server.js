@@ -20,7 +20,7 @@ await connectDB(); // Connect to MongoDB
 await connectCloudinary();
 
 // Define allowed origins for CORS
-const allowedOrigins = ['https://greencart-1-0zt6.onrender.com'];
+const allowedOrigins = ['https://green-cart-fnkf43xi6-shivasais-projects-f86edf27.vercel.app/'];
 
 app.post('/stripe', express.raw({type: 'application/json'}), stripeWebhooks)
 
