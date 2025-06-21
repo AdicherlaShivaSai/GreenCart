@@ -122,22 +122,32 @@ export const stripeWebhooks = async (request, response) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-    console.log('✅ Stripe event received: ', event.type);
   } catch (error) {
-    console.error('❌ Webhook signature verification failed:', error.message);
     return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const { orderId, userId } = session.metadata;
+  // ✅ Handle payment_intent.succeeded event
+  if (event.type === 'payment_intent.succeeded') {
+    const paymentIntent = event.data.object;
 
-    try {
-      await Order.findByIdAndUpdate(orderId, { isPaid: true });
-      await User.findByIdAndUpdate(userId, { cartItems: {} });
-      console.log('✅ Order marked as paid and cart cleared.');
-    } catch (err) {
-      console.error('❌ Database update error:', err);
+    // ✅ You need to get the session using this payment intent
+    const sessions = await stripeInstance.checkout.sessions.list({
+      payment_intent: paymentIntent.id,
+    });
+
+    if (sessions.data.length > 0) {
+      const session = sessions.data[0];
+      const { orderId, userId } = session.metadata;
+
+      try {
+        await Order.findByIdAndUpdate(orderId, { isPaid: true });
+        await User.findByIdAndUpdate(userId, { cartItems: {} });
+        console.log('✅ Order updated & cart cleared.');
+      } catch (err) {
+        console.error('DB update error:', err);
+      }
+    } else {
+      console.error('No session found for payment_intent:', paymentIntent.id);
     }
   } else {
     console.log(`⚠️ Unhandled event type: ${event.type}`);
@@ -145,6 +155,7 @@ export const stripeWebhooks = async (request, response) => {
 
   response.json({ received: true });
 };
+
 
 
 // Get Orders for current user
