@@ -126,29 +126,22 @@ export const stripeWebhooks = async (request, response) => {
     return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
-  // ✅ Only listen to checkout.session.completed
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const { orderId, userId } = session.metadata;
 
     try {
-      // Mark order as paid
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
-
-      // Clear user's cart
       await User.findByIdAndUpdate(userId, { cartItems: {} });
 
-      console.log('Order marked as paid and cart cleared.');
+      console.log('✅ Order marked as paid and cart cleared.');
     } catch (err) {
       console.error('Database update error:', err);
     }
-  } else {
-    console.log(`Unhandled event type ${event.type}`);
   }
 
   response.json({ received: true });
 };
-
 
 // Get Orders for current user
 export const getUserOrders = async (req, res) => {
