@@ -110,7 +110,6 @@ export const placeOrderStripe = async (req, res) => {
 };
 
 
-
 //Stripe webhooks to verify payments action: /stripe
 export const stripeWebhooks = async (request, response) => {
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
@@ -127,25 +126,28 @@ export const stripeWebhooks = async (request, response) => {
     return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object;
-      const { orderId, userId } = session.metadata;
+  // ✅ Only listen to checkout.session.completed
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const { orderId, userId } = session.metadata;
 
+    try {
+      // Mark order as paid
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
+
+      // Clear user's cart
       await User.findByIdAndUpdate(userId, { cartItems: {} });
 
-      break;
+      console.log('Order marked as paid and cart cleared.');
+    } catch (err) {
+      console.error('Database update error:', err);
     }
-    default:
-      console.warn(`Unhandled event type ${event.type}`);
-      break;
+  } else {
+    console.log(`Unhandled event type ${event.type}`);
   }
 
   response.json({ received: true });
-}
-
-
+};
 
 
 // Get Orders for current user
