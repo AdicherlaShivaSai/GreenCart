@@ -122,7 +122,9 @@ export const stripeWebhooks = async (request, response) => {
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    console.log('✅ Stripe event received: ', event.type);
   } catch (error) {
+    console.error('❌ Webhook signature verification failed:', error.message);
     return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
@@ -133,15 +135,17 @@ export const stripeWebhooks = async (request, response) => {
     try {
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
       await User.findByIdAndUpdate(userId, { cartItems: {} });
-
       console.log('✅ Order marked as paid and cart cleared.');
     } catch (err) {
-      console.error('Database update error:', err);
+      console.error('❌ Database update error:', err);
     }
+  } else {
+    console.log(`⚠️ Unhandled event type: ${event.type}`);
   }
 
   response.json({ received: true });
 };
+
 
 // Get Orders for current user
 export const getUserOrders = async (req, res) => {
