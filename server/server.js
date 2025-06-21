@@ -11,6 +11,7 @@ import cartRouter from './routes/cartRoute.js';
 import addressRouter from './routes/addressRoute.js';
 import orderRouter from './routes/orderRoute.js';
 import { stripeWebhooks } from './controllers/orderController.js';
+import bodyParser from  'body-parser';
 
 
 const app = express();
@@ -23,7 +24,7 @@ await connectCloudinary();
 const allowedOrigins = ['https://greencart-1-0zt6.onrender.com'];
 
 
-app.post('/stripe', express.raw({type: 'application/json'}), stripeWebhooks)
+app.post('/stripe', bodyParser.raw({type: 'application/json'}), stripeWebhooks)
 
 
 // Middleware to parse JSON bodies
