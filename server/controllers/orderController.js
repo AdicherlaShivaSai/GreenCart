@@ -118,61 +118,43 @@ export const placeOrderStripe = async (req, res) => {
 
 
 //Stripe webhooks to verify payments action: /stripe
-export const stripeWebhooks = async (request, response)=>{
-  //Stripe gateway
+export const stripeWebhooks = async (request, response) => {
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
-  const sig = request.headers['stripe-signature']
+  const sig = request.headers['stripe-signature'];
   let event;
-  try{
+
+  try {
     event = stripeInstance.webhooks.constructEvent(
       request.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
-    )
-  }catch(error){
-    response.status(400).send(`Webhook Error: ${error.message}`)
+    );
+  } catch (error) {
+    return response.status(400).send(`Webhook Error: ${error.message}`);
   }
-  //handle the event
-  switch(event.type){
-    case "payment_intent.succeeded":{
-      const paymentIntent = event.data.object;
-      const paymentIntentId = paymentIntent.id;
 
-      //getting sessiom metadata
-      const session = await stripeInstance.checkout.sessions.list({
-        payment_intent: paymentIntent,
+  // Only handle checkout.session.completed event
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
 
-      })
+    const { orderId, userId } = session.metadata;
 
-      const {orderId, userId} = session.data[0].metadata;
+    try {
+      // Mark order as paid
+      await Order.findByIdAndUpdate(orderId, { isPaid: true });
 
-      //Mark Payment as paid
-      await Order.findByIdAndUpdate(orderId, {isPaid: true})
+      // Clear user cart
+      await User.findByIdAndUpdate(userId, { cartItems: {} });
 
-      //Clear user cart
-      await User.findByIdAndUpdate(userId,{cartItems: {}})
-      break;
+      console.log("Payment succeeded. Order updated.");
+    } catch (error) {
+      console.error("Database update error:", error);
     }
-    case "payment_intent.failed":{
-      const paymentIntent = event.data.object;
-      const paymentIntentId = paymentIntent.id;
-
-      //getting sessiom metadata
-      const session = await stripeInstance.checkout.sessions.list({
-        payment_intent: paymentIntent,
-
-      })
-
-      const {orderId} = session.data[0].metadata;
-      await Order.findByIdAndDelete(orderId);
-      break;
-    }
-    default:
-      console.error(`Unhandled event type ${event.type}`)
-      break;
   }
-  response.json({received: true});
-}
+
+  response.json({ received: true });
+};
+
 
 
 // Get Orders for current user
