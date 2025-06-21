@@ -46,32 +46,32 @@ export const placeOrderCOD = async (req, res) => {
 // Place Order Stripe: /api/order/stripe
 export const placeOrderStripe = async (req, res) => {
   try {
-    const userId = req.user.id; // string
+    const userId = req.user.id; 
     const { items, address } = req.body;
-
-    const {origin} = req.headers;
+    const { origin } = req.headers;
 
     if (!address || items.length === 0) {
       return res.json({ success: false, message: 'Invalid data' });
     }
 
+    let amount = 0;
     let productData = [];
 
-    // Calculate amount using products
-    let amount = await items.reduce(async (acc, item) => {
+    for (const item of items) {
       const product = await Product.findById(item.product);
+      if (!product) throw new Error("Product not found");
+
       productData.push({
         name: product.name,
         price: product.offerPrice,
         quantity: item.quantity,
-      })
-      // if (!product) throw new Error("Product not found");
-      return (await acc) + product.offerPrice * item.quantity;
-    }, 0);
+      });
 
-    amount += Math.floor(amount * 0.02); // Add 2% tax
+      amount += product.offerPrice * item.quantity;
+    }
 
-    // ✅ Fix: Ensure userId is stored as ObjectId
+    amount += Math.floor(amount * 0.02); // Add tax
+
     const order = await Order.create({
       userId: new mongoose.Types.ObjectId(userId),
       items,
@@ -80,25 +80,17 @@ export const placeOrderStripe = async (req, res) => {
       paymentType: "Online",
     });
 
-    //Stripe gateway Initialize
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
-    //create Line items for stripe
+    const line_items = productData.map((item) => ({
+      price_data: {
+        currency: 'inr',
+        product_data: { name: item.name },
+        unit_amount: Math.floor(item.price * 100)
+      },
+      quantity: item.quantity
+    }));
 
-    const line_items = productData.map((item)=>{
-      return {
-        price_data:{
-          currency: 'inr',
-          product_data:{
-            name: item.name,
-          },
-          unit_amount: Math.floor(item.price + item.price * 0.02) * 100
-        },
-        quantity: item.quantity,
-      }
-    })
-
-    //create session
     const session = await stripeInstance.checkout.sessions.create({
       line_items,
       mode: "payment",
@@ -108,13 +100,15 @@ export const placeOrderStripe = async (req, res) => {
         orderId: order._id.toString(),
         userId,
       }
-    })
+    });
 
     return res.json({ success: true, url: session.url });
+
   } catch (error) {
     return res.json({ success: false, message: error.message });
   }
 };
+
 
 
 //Stripe webhooks to verify payments action: /stripe
@@ -133,27 +127,24 @@ export const stripeWebhooks = async (request, response) => {
     return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
-  // Only handle checkout.session.completed event
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      const { orderId, userId } = session.metadata;
 
-    const { orderId, userId } = session.metadata;
-
-    try {
-      // Mark order as paid
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
-
-      // Clear user cart
       await User.findByIdAndUpdate(userId, { cartItems: {} });
 
-      console.log("Payment succeeded. Order updated.");
-    } catch (error) {
-      console.error("Database update error:", error);
+      break;
     }
+    default:
+      console.warn(`Unhandled event type ${event.type}`);
+      break;
   }
 
   response.json({ received: true });
-};
+}
+
 
 
 
