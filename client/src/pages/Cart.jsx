@@ -125,7 +125,7 @@ const Cart = () => {
                                             >
                                             {Array(Math.max(cartItems[product._id] || 1, 9)).fill(null).map((_, index) => (
                                                 <option key={index} value={index + 1}>
-                                                {index + 1}
+                                                    {index + 1}
                                                 </option>
                                             ))}
                                         </select>
